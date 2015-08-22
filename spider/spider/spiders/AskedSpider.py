@@ -7,8 +7,8 @@ from spider.items import QnaItem
 class LinkedinspiderSpider(Spider):
     name = 'asked'
     allowed_domains = ['asked.kr']
-    #start_urls = ["http://pc.asked.kr/ask.php?id=%d" % num for num in xrange(62, 5346195)]
-    start_urls = ["http://pc.asked.kr/ask.php?id=%d" % num for num in xrange(12, 80)]
+    start_urls = ["http://pc.asked.kr/ask.php?id=%d" % num for num in xrange(62, 5346195)]
+    #start_urls = ["http://pc.asked.kr/ask.php?id=%d" % num for num in xrange(12, 80)]
 
     def __init__(self):
         pass
