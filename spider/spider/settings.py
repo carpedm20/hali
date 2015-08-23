@@ -21,7 +21,7 @@ CONCURRENT_REQUESTS=32
 #CONCURRENT_REQUESTS_PER_IP=16
 
 # Disable cookies (enabled by default)
-COOKIES_ENABLED=False
+#COOKIES_ENABLED=False
 
 # Disable Telnet Console (enabled by default)
 #TELNETCONSOLE_ENABLED=False
@@ -74,3 +74,5 @@ DOWNLOADER_MIDDLEWARES = {
 #HTTPCACHE_DIR='httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES=[]
 #HTTPCACHE_STORAGE='scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+#REDIRECT_ENABLED=False

@@ -4,7 +4,7 @@ from spider.items import QnaItem
 
 # http://pc.asked.kr/ask.php?id=5346194
 
-class LinkedinspiderSpider(Spider):
+class AskedSpider(Spider):
     name = 'asked'
     allowed_domains = ['asked.kr']
     start_urls = ["http://pc.asked.kr/ask.php?id=%d" % num for num in xrange(62, 5346195)]
