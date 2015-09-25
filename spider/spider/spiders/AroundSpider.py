@@ -14,7 +14,13 @@ class AroundSpider(Spider):
     allowed_domains = ['around.conbus.net']
     # https://around.conbus.net/v2/articles/2288749/
     # https://around.conbus.net/v2/articles/2031158/
-    start_urls = ["https://around.conbus.net/v2/articles/%s" % num for num in xrange(2288749, 1, -1)]
+    #start_urls = ["https://around.conbus.net/v2/articles/%s" % num for num in xrange(2288749, 1, -1)]
+    start_urls = ["https://around.conbus.net/v2/articles/%s" % num for num in xrange(664449, 2288749)]
+    # 1626701
+    # 664449
+    # 943812
+    # 536258
+    # 938213
 
     def __init__(self):
         self.make_new_user()

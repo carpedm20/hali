@@ -13,7 +13,8 @@ class JisiklogSpider(Spider):
     #start_urls = ["http://www.jisiklog.com/qa/%d" % num for num in xrange(1, 10)]
     #start_urls = ["http://www.jisiklog.com/qa/%d" % num for num in xrange(22205262, 22205263)]
     #start_urls = ["http://www.jisiklog.com/qa/%d" % num for num in xrange(209875, 22205263)]
-    start_urls = ["http://www.jisiklog.com/qa/%d" % num for num in xrange(22205263, 297422, -1)]
+    #start_urls = ["http://www.jisiklog.com/qa/%d" % num for num in xrange(22205263, 297422, -1)]
+    start_urls = ["http://www.jisiklog.com/qa/%d" % num for num in xrange(97430, 21965548)]
 
     def __init__(self):
         pass
