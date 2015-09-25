@@ -1,10 +1,7 @@
 *py[co]
-<<<<<<< HEAD
-=======
 *.ipynb_checkpoint*
 *.t7
 *.zip
->>>>>>> 07b7a7866a5897a36e5faebb38e9cd8547660ce2
 
 #test
 *.json
