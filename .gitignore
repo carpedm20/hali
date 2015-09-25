@@ -1,4 +1,7 @@
 *py[co]
+*.ipynb_checkpoint*
+*.t7
+*.zip
 
 #test
 *.json
