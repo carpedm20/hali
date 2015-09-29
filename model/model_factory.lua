@@ -1,4 +1,5 @@
 -- code highly referenced from https://github.com/facebook/SCRNNs/blob/master/mfactory.lua
+-- http://arxiv.org/pdf/1412.7753v2.pdf
 local models = {}
 
 function models.makeModel(params, dict, n_classes)
@@ -15,9 +16,50 @@ function models.makeModel(params, dict, n_classes)
   local enc, dec, dec_loss
   local internal_layers = {}
 
-  if string.find(params.name, 'rnn') then
+  -- Standard Recurrent Neural Networks
+  if string.find(params.name, 'srn') then
+    -- [[ Encoder ]]
     enc = nn.Sequential()
+
+    -- nn.ParallelTable()
+    --  +----------+        +-----------+        +-----------+
+    --  | {input1, +--------> {member1, |-------->           |
+    --  |          |        |           |        | CAddTable |------>
+    --  |  input2} +-------->  member2} |-------->           |
+    --  +----------+        +-----------+        +-----------+
     local net_parallel = nn.ParallelTable()
+    -- A : d × m token embedding matrix
+    local embed = nn.LookupTableGPU(n_classes, n_hidden) -- A x_t
+    -- R : m × m matrix of recurrent weights
+    local project = nn.LinearNB(n_hidden, n_hidden) -- R h_{t-1}
+
+    net_parallel:add(embed)
+    net_parallel:add(project)
+    enc:add(net_parallel)
+    enc:add(nn.CAddTable()) -- A x_t + R h_{t-1}
+    
+    if params.non_linearity == 'relu' then
+      enc:add(nn.Threshold()) -- Rectifier unit, max(0, x)
+    elseif params.non_linearity == 'sigmoid' then
+      enc:add(nn.Sigmoid()) -- h_t = sigmoid(A x_t + R h_{t-1})
+    else
+      error("Wrong non-linearity " .. params.non_linearity)
+    end
+
+    -- [[ Decoder ]]
+    if string.find(params.name, '_sm') then
+      dec = nn.Sequential()
+      -- nn.LinearNB : just same as nn.Linear() but fbnn implementation
+      dec.add(nn.LinearNB(n_hidden, n_classes))
+      dec.add(nn.LogSoftMax())
+    elseif string.find(params.name, '_hsm') then
+      decloss = nn.HSM(dict.mapping, n_hidden)
+    else
+      error('wrong model name: should include `_sm` or `_hsm`')
+    end
+    
+    intern_layers.embed = embed
+    intern_layers.project = project
 
   elseif string.find(params.name, 'lstm') then
     -- input : a table {x_t, {h_{t-1}, c_{t-1}}}
