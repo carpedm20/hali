@@ -36,3 +36,11 @@ Torch (Model zoo)
 - [Structurally Constrained Recurrent Neural Network](https://github.com/facebook/SCRNNs)
 - [Tree-structured Long Short-Term Memory networks](https://github.com/stanfordnlp/treelstm)
 - [Character-level Convolutional Networks for Text Classification](https://github.com/zhangxiangxiao/Crepe)
+- [Grid LSTM](https://github.com/sherjilozair/grid-lstm)
+
+Multiple GPU
+
+- [cutorch](https://github.com/torch/cutorch/issues/42)
+- [fbcunn](https://github.com/facebook/fbcunn/issues/8)
+- [vgg example](https://github.com/facebook/fbcunn/blob/9f4e8b47397b5ba34aeb759ea8403a8793b59f8b/examples/imagenet/models/vgg_cudnn.lua)
+- [gist](https://gist.github.com/mmmikael/10fdb421b0686fac3418)
