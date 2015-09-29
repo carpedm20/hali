@@ -29,3 +29,10 @@ Papers
 People
 
 - [http://www.cs.umd.edu/~miyyer/](http://www.cs.umd.edu/~miyyer/)
+
+Torch (Model zoo)
+
+- [Applied Deep Learning for Computer Vision with Torch - CVPR 2015, Boston, MA](https://github.com/soumith/cvpr2015)
+- [Structurally Constrained Recurrent Neural Network](https://github.com/facebook/SCRNNs)
+- [Tree-structured Long Short-Term Memory networks](https://github.com/stanfordnlp/treelstm)
+- [Character-level Convolutional Networks for Text Classification](https://github.com/zhangxiangxiao/Crepe)
