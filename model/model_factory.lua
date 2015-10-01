@@ -28,7 +28,11 @@ function models.makeModel(params, dict, n_classes)
     --  |  input2} +-------->  member2} |-------->           |
     --  +----------+        +-----------+        +-----------+
     local net_parallel = nn.ParallelTable()
-    -- A : d × m token embedding matrix
+    -- LookupTable : a particular case of a convolution, where the width of the convolution would be 1.
+    -- input is a 1D or 2D tensor filled with **indices**.
+    -- d : fixed dictionary containing d tokens (n_classes)
+    -- m : hidden layer size (n_hidden)
+    -- A : m × d token embedding matrix
     local embed = nn.LookupTableGPU(n_classes, n_hidden) -- A x_t
     -- R : m × m matrix of recurrent weights
     local project = nn.LinearNB(n_hidden, n_hidden) -- R h_{t-1}
@@ -37,6 +41,15 @@ function models.makeModel(params, dict, n_classes)
     net_parallel:add(project)
     enc:add(net_parallel)
     enc:add(nn.CAddTable()) -- A x_t + R h_{t-1}
+    -- n_classes, n_hidden = 2, 5
+    --
+    -- net_parallel:forward{torch.Tensor{1}, torch.Tensor{1,1,1,1,1}}
+    -- {
+    --   1 : DoubleTensor - size: 1x5
+    --   2 : DoubleTensor - size: 5
+    -- }
+    -- enc:forward{torch.Tensor{1}, torch.Tensor{1,1,1,1,1}}
+    -- [torch.DoubleTensor of size 1x5]
     
     if params.non_linearity == 'relu' then
       enc:add(nn.Threshold()) -- Rectifier unit, max(0, x)

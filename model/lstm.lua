@@ -92,4 +92,38 @@ end
 
 function LSTM:unroll(n)
   self.unrolled_nets = {}
+  -- params, gradParams : original parameters (memory)
+  local params, gradParams = self.nets.encoder:parameters()
+  local mem = torch.MemoryFile('w'):binary() -- creates a file in memory
+  mem:writeObject(self.nets.encoder) -- writes the object into file (copy encoder)
+
+  -- clone한 encoder의 storage를 기존의 encoder의 params, gradParams를 보게(view) 한다.
+  -- 그냥 lstm에서 모든 t의 파라미터를 같게 하기 위해서 하는 방법.
+  -- decoder는 복사를 안하는거 같은데 다른 코드에서 뭔가를 봤는데 기억이 안남..
+  -- create `n` copy of LSTMs
+  -- variable of interest : decoder_gradInput (no initialization), params, gradParams (copy)
+  for i=1, n do
+    self.unrolled_nets[i] = {}
+    self.unrolled_nets[i].decoder_gradInput = torch.Tensor():type(self.type)
+    local reader = torch.MemoryFile(mem:storage(), 'r'):binary()
+    local clone = reader:readObject()
+    reader:close()
+    local cloneParams, cloneGradParams = clone:parameters()
+    for j=1, #params do
+      -- https://github.com/torch/torch7/blob/master/doc/tensor.md#self-setstorage-storageoffset-sizes-strides
+      -- :set(storage)
+      -- Tensor "view" the given storage. Any modification in the elements 
+      -- of the Storage will have a impact on the elements of the Tensor.
+      cloneParams[j]:set(params[j])
+      cloneGradParams[j]:set(gradParams[j])
+    end
+    self.unrolled_nets[i]['encoder'] = clone
+    collectgarbage()
+  end
+  mem:close()
 end
+
+function LSTM:get_initial_state(bsize)
+  if not self.initial_state then
+    self.initial_state = {}
+    self.initial_state[1] = torch.Tensor(bsize, self.n_hidden):type(self.type)

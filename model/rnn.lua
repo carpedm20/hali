@@ -165,8 +165,8 @@ end
 
 
 -- return a tensor filled with initial state
--- what is bsize ???
 function RNN:get_initial_state(bsize)
+  -- bsize : batch size
   local initial_state
   if self.initial_state_dim ~= nil then
     initial_sate = torch.Tensor(torch.LongStorage(self.initial_state_dim)):type(self.type)
@@ -216,3 +216,5 @@ function RNN:elemDecodeBackward(nets, target, learning_rate)
 
     nets.decoder_gradInput:resizeAs(gradInput):copy(gradInput)
   else
+    assert(self.nets.decoder_with_loss ~= nil)
+    local gradInput
