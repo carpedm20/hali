@@ -104,6 +104,8 @@ function LSTM:unroll(n)
   -- variable of interest : decoder_gradInput (no initialization), params, gradParams (copy)
   for i=1, n do
     self.unrolled_nets[i] = {}
+    -- 여기 복사 안해도 되는건가?
+    -- ex) nets.decoder_gradInput:resizeAs(gradInput):copy(gradInput)
     self.unrolled_nets[i].decoder_gradInput = torch.Tensor():type(self.type)
     local reader = torch.MemoryFile(mem:storage(), 'r'):binary()
     local clone = reader:readObject()
@@ -126,4 +128,85 @@ end
 function LSTM:get_initial_state(bsize)
   if not self.initial_state then
     self.initial_state = {}
+    -- [1] : batch_size x n_hidden
     self.initial_state[1] = torch.Tensor(bsize, self.n_hidden):type(self.type)
+    self.initial_state[2] = torch.Tensor(bsize, self.n_hidden):type(self.type)
+    -- why two???
+    self.initial_state[1]:fill(self.initial_val)
+    self.initial_state[2]:fill(self.initial_val)
+  end
+  return self.initial_state
+end
+
+
+-- Run forward pass in the set of nets, with previous state, prev_state
+function LSTM:elemForward(nets, input, prev_state, target)
+  local bsize = input:size(1)
+  prev_state = prev_state or self:get_initial_state(bsize)
+
+  nets.input = input
+  nets.prev_state = prev_state
+
+  local out_encoder = nets.encoder:forward{input, prev_state}
+  local out_decoder, err, n_valid = nil, nil, nil
+
+  -- using the main net (not unrolled), which means using self.nets not nets.
+  if self.nets.decoder ~= nil then
+    assert(self.nets.decoder_with_loss == nil)
+    out_decoder = self.nets.decoder:forward(out_decoder[1])
+    if target then
+      err, n_valid = self.criterion:forward(out_decoder, target)
+    end
+  else
+    assert(self.nets.decoder_With_loss ~= nil)
+    err, n_valid = self.nets.decoder_with_loss:forward(out_encoder[1], target)
+  end
+  n_valid = n_valid or input:size()
+  return out_decoder, out_encoder, err, n_valid
+end
+
+
+-- run backward pass on the decode+criterion (or decode_with_loss) modules
+function LSTM:elemDecoderBackward(nets, target, leraning_rate)
+  if self.nets.decoder ~= nil then
+    assert(self.nets.decoder_with_loss == nil)
+    -- output = net:forward(input)
+    -- criterion:forward(output, target)
+    -- gradients = criterion:backward(output, target)
+    -- gradInput = net:backward(input, gradients)
+    local decoder_output = self.nets.decoder.output
+    local derr_do = self.criterion:backward(decoder_output, target)
+    local gradInput = self.nets.decoder(nets.encoder.output[1], derr_do)
+
+    nets.decoder_gradInput:resize(gradInput):copy(gradInput)
+  else
+    assert(self.nets.decoder_with_loss ~= nil)
+
+    -- https://github.com/torch/nn/blob/master/doc/module.md#gradinput-backwardinput-gradoutput
+    -- backpropagation step consist in computing two kind of gradients at input given gradOutput (gradients with respect to the output of the module)
+    --
+    -- http://facebook.github.io/fbnn/fbnn/
+    -- fbnn.HSM:updateGradInput(input, target)
+    ---- Note: call this function at most once after each call updateOutput
+    -- fbnn.HSM:accGradParameters(input, target, scale, direct_update)
+    ---- scale must be set to the negative learning rate (-learning_rate)
+    ---- Before calling this function you have to call HSM:updateGradInput first.
+    local gradInput = self.nets.decoder_with_loss:updateGradInput(nets.encoder.output[1], target)
+    nets.decoder_gradInput:resizeAs(gradInput):copy(gradInput)
+
+    assert(torch.typename(self.nets.decoder_with_loss) == 'nn.HSM')
+    self.nets.decoder_with_loss:accGradParameters(
+      nets.encoder.output[1], target, -learning_rate, true)
+  end
+end
+
+-- main training function
+---- input : input word or minibatch
+---- label : target word or minibatch
+function LSTM:netInputTrain(input, label, params)
+  self.i_input = self.i_input + 1
+  local last_nets = self.unrolled_nets[1]
+  for i = 1, #self.unrolled_nets - 1 do
+    self.unrolled_nets[i] = self.unrolled_nets[i + 1]
+  end
+
