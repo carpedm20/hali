@@ -166,7 +166,7 @@ function Tokenizer.build_dictionary(config, trainFileName)
                                   '_thresh=' .. config.threshold ..
                                   '.th7')
   torch.save(dict_fname, dict)
-  print('There are ' .. net_words .. ' words in the corpus.')
+  print('There are effectively ' .. net_words .. ' words in the corpus.')
 
   return dict, n_clusters
 end

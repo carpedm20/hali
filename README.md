@@ -25,10 +25,13 @@ Papers
 - [Any Open Source Implementations of Neural Turing Machines or Memory Networks?](http://www.reddit.com/r/MachineLearning/comments/39u7x6/any_open_source_implementations_of_neural_turing/)
 - [An implementation of Neural Turing Machines](https://github.com/fumin/ntm)
 - [Building a Semantic Parser Overnight](http://nlp.stanford.edu/pubs/wang-berant-liang-acl2015.pdf)
+- [Neural Machine Translation by LISA](http://104.131.78.120/)
+
 
 People
 
 - [http://www.cs.umd.edu/~miyyer/](http://www.cs.umd.edu/~miyyer/)
+
 
 Torch (Model zoo)
 
@@ -37,6 +40,7 @@ Torch (Model zoo)
 - [Tree-structured Long Short-Term Memory networks](https://github.com/stanfordnlp/treelstm)
 - [Character-level Convolutional Networks for Text Classification](https://github.com/zhangxiangxiao/Crepe)
 - [Grid LSTM](https://github.com/sherjilozair/grid-lstm)
+
 
 Multiple GPU
 
