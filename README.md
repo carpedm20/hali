@@ -26,6 +26,7 @@ Papers
 - [An implementation of Neural Turing Machines](https://github.com/fumin/ntm)
 - [Building a Semantic Parser Overnight](http://nlp.stanford.edu/pubs/wang-berant-liang-acl2015.pdf)
 - [Neural Machine Translation by LISA](http://104.131.78.120/)
+- [Compositional Morphology for Word Representations and Language Modelling](https://bothameister.github.io/)
 
 
 People
@@ -40,6 +41,9 @@ Torch (Model zoo)
 - [Tree-structured Long Short-Term Memory networks](https://github.com/stanfordnlp/treelstm)
 - [Character-level Convolutional Networks for Text Classification](https://github.com/zhangxiangxiao/Crepe)
 - [Grid LSTM](https://github.com/sherjilozair/grid-lstm)
+- [Character-level Convolutional Networks for Text Classification](https://github.com/zhangxiangxiao/Crepe)
+- [Character-Aware Neural Language Models](https://github.com/yoonkim/lstm-char-cnn)
+- [A Neural Attention Model for Abstractive Summarization](https://github.com/facebook/NAMAS)
 
 
 Multiple GPU
