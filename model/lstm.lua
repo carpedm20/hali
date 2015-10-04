@@ -205,8 +205,89 @@ end
 ---- label : target word or minibatch
 function LSTM:netInputTrain(input, label, params)
   self.i_input = self.i_input + 1
+  -- move first net to the last (why???)
   local last_nets = self.unrolled_nets[1]
   for i = 1, #self.unrolled_nets - 1 do
     self.unrolled_nets[i] = self.unrolled_nets[i + 1]
   end
+  self.unrolled_nets[#self.unrolled_nets] = last_nets
+  local output, next_state, err, n_valid = self:elemForward(last_nets, input,
+                                                            self.state, label)
+  self.elemDecodeBackward(last_nets, label, params.learning_rate)
+  self.state = {}
+  self.state[1] = next_state[1]
+  self.state[2] = next_state[2]
 
+  if self.i_input % backprop_freq == 0 then
+    local gi_state_i = 0
+    gi_state_i.hid = nil
+    gi_state_i.mem = nil
+
+    local unroll_bound = math.max(1, #self.unrolled_nets - self.i_input + 1)
+    local j=1
+    for i=#self.unrolled_nets, unroll_bound, -1 do
+      local nets=self.unrolled_nets[i]
+      local prev_state_i, input_i = nets.prev_state, nets_input
+      -- gradInput of decoder network
+      local gi_decoder_net = nets.decoder_gradInput
+
+      -- get gradients from decoder
+      if not gi_state_i.hid then
+        -- if first, initialize it
+        gi_state_i.hid = gi_decoder_net
+      elseif j <= self.backprop_freq then
+        -- if not first, cumulate gradInput from other network
+        gi_state_i.hid:add(gi_decoder_net)
+        j = j+1
+      else
+        -- do nothing. Because gradients from decoder have
+        -- already been accounted for
+      end
+
+      -- clip the gradients with regard to hidden states
+      -- prevent gradient explosion
+      if params.gradInput_clip then
+        self.clipGradHiddens(gi_state_i.hid, params.gradInput_clip)
+      end
+      
+      if i ~= 1 then
+        -- [gradInput] backward(input, gradOutput)
+        local gi_encoder_net = nets.encoder:backward({input_i, prev_state_i},
+                                                     {gi_state_i.hid, gi_state_i.mem})
+        gi_state_i.hid = gi_encoder_net[2][1] -- ???
+        gi_state_i.mem = gi_encoder_net[2][2] -- ???
+      end
+    end
+
+    if params.grad_clip then
+      self.clipGradParams(params.gradient_clip)
+    end
+
+    self:updateParams(self.w, params)
+    -- zero gradients for the next time
+    self.dw:zero()
+  end
+
+  return err, n_valid
+end
+
+-- Run only forward inputs (1d or 2d sequence of inputs) and compare with labels
+-- Returns the sum of the errors and the # of terms in this sum
+function LSTM:test(inputs, labels)
+  local total_err = 0
+  local total_n_valid = 0
+
+  for i=1, inputs:size(1) do
+    local output, next_state, err, n_valid = self:elemForward(
+      self.unrolled_nets[1], inputs[i], self.state, labels[i])
+    self.state = {}
+    self.state[1] = next_state[1] -- ???
+    self.state[2] = next_state[2]
+    if type(err) ~= 'number' then
+      err = err[1]
+    end
+    total_err = total_err + err
+    total_n_valid = total_n_valid + n_valid
+  end
+  return total_err, total_n_valid
+end
