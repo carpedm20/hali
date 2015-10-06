@@ -2,11 +2,11 @@ local utf8 = require 'lua-utf8'
 local Map = require 'pl.Map'
 local Set = require 'pl.Set'
 
+config = require 'config'
 
-local terms = {}
-local langs = {'en','ko'}
+langs = config.langs
+filename = config.filename
 
-local filename = string.format('%s_%s.txt',langs[1],langs[2])
 local print_mode = false
 
 if print_mode then
@@ -15,18 +15,27 @@ else
   sample_size = 100000
 end
 
+local terms = {}
 for _, lang in ipairs(langs) do
   terms[lang] = {}
-end
 
-terms['en']['conjunction'] = {'however','but','therefore','so','hence'}
-terms['ko']['conjunction'] = {'하지만','하지만','그러므로','그래서','그러므로'}
-terms['en']['subject'] = {'i','he','she','taehoon','janghoon'}
-terms['ko']['subject'] = {'나','그','그녀','태훈','장훈'}
-terms['en']['verb'] = {'like','love','hate','go after','catch up with','catch','go to','ask'}
-terms['ko']['verb'] = {'좋아한다','사랑한다','싫어한다','따라갔다','따라갔다','잡았다','갔다','물어봤다'}
-terms['en']['object'] = {'me','him','her','taehoon','janghoon'}
-terms['ko']['object'] = {'나','그','그녀','태훈','장훈'}
+  if lang == 'en' then
+    terms['en']['conjunction'] = {'however,','but','therefore,','so','hence'}
+    terms['en']['subject'] = {'i','he','she','taehoon','janghoon'}
+    terms['en']['verb'] = {'like','love','hate','go after','catch up with','catch','go to','ask'}
+    terms['en']['object'] = {'me','him','her','taehoon','janghoon'}
+  elseif lang == 'ko' then
+    terms['ko']['conjunction'] = {'하지만','하지만','그러므로','그래서','그러므로'}
+    terms['ko']['subject'] = {'나','그','그녀','태훈','장훈'}
+    terms['ko']['verb'] = {'좋아한다','사랑한다','싫어한다','따라갔다','따라갔다','잡았다','갔다','물어봤다'}
+    terms['ko']['object'] = {'나','그','그녀','태훈','장훈'}
+  elseif lang == 'ja' then
+    terms['ko']['conjunction'] = {'しかし,','だって','だから,','それで','だから'}
+    terms['ko']['subject'] = {'私','彼','彼女','태훈','장훈'}
+    terms['ko']['verb'] = {'善よがる','愛している','싫어한다','따라갔다','따라갔다','잡았다','갔다','물어봤다'}
+    terms['ko']['object'] = {'私','彼','彼女','태훈','장훈'}
+  end
+end
 
 function get_v_o(s, v, o, l, is_past, is_and)
   if l == 'en' then
@@ -160,6 +169,7 @@ for i=1, sample_size do
     end
   end
 end
+
 if not print_mode then
   io.close()
 end
