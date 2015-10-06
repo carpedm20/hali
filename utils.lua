@@ -3,4 +3,3 @@ function file_exists(file)
   if f then f:close() end
   return f ~= nil
 end
-

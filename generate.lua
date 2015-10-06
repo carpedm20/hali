@@ -21,14 +21,14 @@ for _, lang in ipairs(langs) do
 
   if lang == 'en' then
     terms['en']['conjunction'] = {'however,','but','therefore,','so','hence'}
-    terms['en']['subject'] = {'i','he','she','taehoon','janghoon'}
+    terms['en']['subject'] = {'i','he','she','they','you','taehoon','janghoon'}
     terms['en']['verb'] = {'like','love','hate','go after','catch up with','catch','go to','ask'}
-    terms['en']['object'] = {'me','him','her','taehoon','janghoon'}
+    terms['en']['object'] = {'me','him','her','them','you','taehoon','janghoon'}
   elseif lang == 'ko' then
     terms['ko']['conjunction'] = {'하지만','하지만','그러므로','그래서','그러므로'}
-    terms['ko']['subject'] = {'나','그','그녀','태훈','장훈'}
+    terms['ko']['subject'] = {'나','그','그녀','그들','너','태훈','장훈'}
     terms['ko']['verb'] = {'좋아한다','사랑한다','싫어한다','따라갔다','따라갔다','잡았다','갔다','물어봤다'}
-    terms['ko']['object'] = {'나','그','그녀','태훈','장훈'}
+    terms['ko']['object'] = {'나','그','그녀','그들','너','태훈','장훈'}
   elseif lang == 'ja' then
     terms['ko']['conjunction'] = {'しかし,','だって','だから,','それで','だから'}
     terms['ko']['subject'] = {'私','彼','彼女','태훈','장훈'}
@@ -72,9 +72,9 @@ function get_v_o(s, v, o, l, is_past, is_and)
       v = utf8.gsub(v, '갔다','왔다')
     end
 
-    if Set{'태훈','장훈'}[s] then s = s .. '은' else s = s .. '는' end
+    if Set{'태훈','장훈','그들'}[s] then s = s .. '은' else s = s .. '는' end
     if Set{'갔다','왔다','물어봤다'}[v] then o = o .. '에게'
-    elseif Set{'태훈','장훈'}[o] then o = o .. '을' else o = o .. '를' end
+    elseif Set{'태훈','장훈','그들'}[o] then o = o .. '을' else o = o .. '를' end
 
     if is_past then
       if utf8.sub(v, -2) == '한다' then
