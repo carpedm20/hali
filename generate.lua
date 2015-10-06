@@ -3,10 +3,12 @@ require 'utf8sub'
 Map = require 'pl.Map'
 Set = require 'pl.Set'
 
-sample_size = 10000
 
 terms = {}
 langs = {'en','ko'}
+
+filename = string.format('%s_%s.txt',langs[1],langs[2])
+sample_size = 100000
 
 for _, lang in ipairs(langs) do
   terms[lang] = {}
@@ -71,7 +73,7 @@ function make(idx,l,c,s,v,o,term,add_sentence,add_conjunct)
   return str
 end
 
-file = io.open (string.format('%s_%s.txt',langs[1],langs[2]),'w+')
+file = io.open (filename,'w+')
 io.output(file)
 
 for i=1, sample_size do
