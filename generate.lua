@@ -30,9 +30,14 @@ terms['ko']['object'] = {'나','그','그녀','태훈','장훈'}
 
 function get_v_o(s, v, o, l, is_past, is_and)
   if l == 'en' then
+    if o == 'me' and string.sub(v,1,2) == 'go' then 
+      v = string.gsub(v, 'go','come')
+    end
     if Set{'he','she','taehoon','janghoon'}[s] and not is_past then
       if string.sub(v,1,2) == 'go' then
         v = string.gsub(v, 'go','goes')
+      elseif string.sub(v,1,4) == 'come' then
+        v = string.gsub(v, 'come','comes')
       elseif string.sub(v,1,5) == 'catch' then
         v = string.gsub(v, 'catch','catches')
       else
@@ -43,6 +48,8 @@ function get_v_o(s, v, o, l, is_past, is_and)
     if is_past then
       if string.sub(v,1,2) == 'go' then
         v = string.gsub(v, 'go','went')
+      elseif string.sub(v,1,4) == 'come' then
+        v = string.gsub(v, 'come','came')
       elseif string.sub(v,1,5) == 'catch' then
         v = string.gsub(v, 'catch','catched')
       elseif string.sub(v, -1) == 'e' then
@@ -52,8 +59,12 @@ function get_v_o(s, v, o, l, is_past, is_and)
       end
     end
   elseif l == 'ko' then
+    if o == '나' and utf8.find(v, '갔다') then
+      v = utf8.gsub(v, '갔다','왔다')
+    end
+
     if Set{'태훈','장훈'}[s] then s = s .. '은' else s = s .. '는' end
-    if Set{'갔다','물어봤다'}[v] then o = o .. '에게'
+    if Set{'갔다','왔다','물어봤다'}[v] then o = o .. '에게'
     elseif Set{'태훈','장훈'}[o] then o = o .. '을' else o = o .. '를' end
 
     if is_past then
@@ -105,8 +116,8 @@ function make(idx,l,c,s,v,o,add_sentence,add_conjunct,is_past)
   return str
 end
 
-file = io.open (filename,'w+')
 if not print_mode then
+  file = io.open (filename,'w+')
   io.output(file)
 end
 
@@ -149,4 +160,6 @@ for i=1, sample_size do
     end
   end
 end
-io.close()
+if not print_mode then
+  io.close()
+end
