@@ -15,8 +15,11 @@ function LSTM.lstm(config)
   end
 
   for i=1, n_layers do
-    input = nn.Identity()()
-    lstm_prev_state = nn.Identity()()
+    -- H (n_hidden) : hidden unit size
+    -- D (n_classes) : word vector size
+    -- B (b_size) : batch size
+    local input = nn.Identity()() -- [D * B]
+    local lstm_prev_state = nn.Identity()() -- [2H * B]
 
     local prev_h, prev_c = lstm_prev_state:split(2)
 
@@ -33,9 +36,6 @@ function LSTM.lstm(config)
     local hidden3 = nn.LinearNB(n_hidden, n_hidden)
     local hidden4 = nn.LinearNB(n_hidden, n_hidden)
 
-    -- H (n_hidden) : hidden unit size
-    -- D (n_classes) : word vector size
-    -- B (b_size) : batch size
     -- [H * D] x [D * B] = [H * B]
     local output1 = embed1(input)
     local output2 = embed2(input)
@@ -48,17 +48,16 @@ function LSTM.lstm(config)
     local h_output3 = hidden3(prev_h)
     local h_output4 = hidden4(prev_h)
 
-    local i_gate = nn.Sigmoid()(nn.CAddTable()({output1, h_output1}))
+   acocal i_gate = nn.Sigmoid()(nn.CAddTable()({output1, h_output1}))
     local f_gate = nn.Sigmoid()(nn.CAddTable()({output2, h_output2}))
     local o_gate = nn.Sigmoid()(nn.CAddTable()({output3, h_output3}))
     local g_gate = nn.Tanh()(nn.CAddTable()({output4, h_output4}))
 
-    next_c = nn.CAddTable(nn.CMulTable(f_gate, prev_c),
-                          nn.CMulTable(i_gate, g_gate))
-    next_h = nn.CMulTable(o_gate, nn.Tanh()(next_c))
+    next_c = nn.CAddTable()({nn.CMulTable()({f_gate, prev_c}), nn.CMulTable()({i_gate, g_gate})})
+    next_h = nn.CMulTable()({o_gate, nn.Tanh()(next_c)})
 
     local next_state = nn.Identity(){next_h, next_c}
-    encoder = nn.gMoudle({input, lstm_prev_state}, {next_state})
+    encoder = nn.gModule({input, lstm_prev_state}, {next_state})
 
     return encoder
   end

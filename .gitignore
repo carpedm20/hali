@@ -1,3 +1,4 @@
+*.txt
 *py[co]
 *.ipynb_checkpoint*
 *.t7
