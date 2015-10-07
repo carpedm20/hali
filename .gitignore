@@ -1,7 +1,7 @@
 *.txt
 *py[co]
 *.ipynb_checkpoint*
-*.t7
+*.th7
 *.zip
 
 #test
