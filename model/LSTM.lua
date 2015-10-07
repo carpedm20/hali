@@ -1,10 +1,9 @@
 local LSTM = torch.class('LSTM')
 
-function LSTM.lstm(config)
+function LSTM.lstm(config, n_classes)
   local n_hidden = config.n_hidden
-  local n_classes = config.n_classes
   local n_layers = config.n_layers
-  local gpu_mode = config.gpu_mode or false
+  local gpu_mode = config.gpu_mode or true
 
   net = nn.Sequential()
 
@@ -48,7 +47,7 @@ function LSTM.lstm(config)
     local h_output3 = hidden3(prev_h)
     local h_output4 = hidden4(prev_h)
 
-   acocal i_gate = nn.Sigmoid()(nn.CAddTable()({output1, h_output1}))
+    local i_gate = nn.Sigmoid()(nn.CAddTable()({output1, h_output1}))
     local f_gate = nn.Sigmoid()(nn.CAddTable()({output2, h_output2}))
     local o_gate = nn.Sigmoid()(nn.CAddTable()({output3, h_output3}))
     local g_gate = nn.Tanh()(nn.CAddTable()({output4, h_output4}))

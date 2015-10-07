@@ -1,83 +1,78 @@
+-- reference : https://github.com/facebook/SCRNNs/blob/master/tokenizer.lua
 require 'utils'
 
-xlua = require 'xlua'
-pl = require('pl.import_into')()
-config = require 'config'
-ffivector = require('fb.ffivector')
-
-langs = config.langs
-filename = config.filename
-threshold = config.threshold or 0
-
-new_line_symbol, unknown_symbol = '</s>', '</unk>'
+local xlua = require 'xlua'
+local pl = require('pl.import_into')()
+local ffivector = require('fb.ffivector')
 
 local Tokenizer = {}
+
+local langs = config.langs
+local new_line_symbol, unknown_symbol = '</s>', '</unk>'
 
 --===================
 -- Build Dictionary
 --===================
 
-function Tokenizer.make_dictionary()
-  dict = {}
-  w_count = {}
+function Tokenizer.make_dictionary(config, filename)
+  local threshold = config.threshold or 0
+
+  local dict = {}
+  local w_count = {}
   for _, lang in pairs(langs) do
-  max_dict_size = 500000
-  dict[lang] = {}
-  dict[lang].symbol_to_index = {}
-  dict[lang].index_to_symbol = {}
-  dict[lang].index_to_frequency = torch.Tensor(max_dict_size)
+    local max_dict_size = 500000
+    dict[lang] = {}
+    dict[lang].symbol_to_index = {}
+    dict[lang].index_to_symbol = {}
+    dict[lang].index_to_frequency = torch.Tensor(max_dict_size)
 
-  w_count[lang] = 1
+    w_count[lang] = 1
 
-  dict[lang].symbol_to_index[unknown_symbol] = w_count[lang]
-  dict[lang].index_to_symbol[w_count[lang]] = unknown_symbol
-  dict[lang].index_to_frequency[w_count[lang]] = 0
-  end
-
-  if not file_exists(filename) then
-  dofile('genearte.lua')
+    dict[lang].symbol_to_index[unknown_symbol] = w_count[lang]
+    dict[lang].index_to_symbol[w_count[lang]] = unknown_symbol
+    dict[lang].index_to_frequency[w_count[lang]] = 0
   end
 
   idx = nil
   line_counter = 1
   for line in io.lines(filename) do
-  lang = langs[(line_counter+1) % 2 + 1]
-  line_counter = line_counter + 1
+    lang = langs[(line_counter+1) % 2 + 1]
+    line_counter = line_counter + 1
 
-  line = line:gsub("\t","")
-  line = line:gsub("%s+"," ")
+    line = line:gsub("\t","")
+    line = line:gsub("%s+"," ")
 
-  local words = pl.utils.split(line, ' ')
-  for i, word in pairs(words) do
-    if word ~= "" then
-      if dict[lang].symbol_to_index[word] == nil then
-        w_count[lang] = w_count[lang] + 1
-        dict[lang].symbol_to_index[word] = w_count[lang]
-        dict[lang].index_to_symbol[w_count[lang]] = word
-        dict[lang].index_to_frequency[w_count[lang]] = 1
-      else
-        idx = dict[lang].symbol_to_index[word]
-        dict[lang].index_to_frequency[idx] = dict[lang].index_to_frequency[idx] + 1
+    local words = pl.utils.split(line, ' ')
+    for i, word in pairs(words) do
+      if word ~= "" then
+        if dict[lang].symbol_to_index[word] == nil then
+          w_count[lang] = w_count[lang] + 1
+          dict[lang].symbol_to_index[word] = w_count[lang]
+          dict[lang].index_to_symbol[w_count[lang]] = word
+          dict[lang].index_to_frequency[w_count[lang]] = 1
+        else
+          idx = dict[lang].symbol_to_index[word]
+          dict[lang].index_to_frequency[idx] = dict[lang].index_to_frequency[idx] + 1
+        end
       end
+    end
+
+    if dict[lang].symbol_to_index[new_line_symbol] == nil then
+      w_count[lang] = w_count[lang] + 1
+      dict[lang].symbol_to_index[new_line_symbol] = w_count[lang]
+      dict[lang].index_to_symbol[w_count[lang]] = new_line_symbol
+      dict[lang].index_to_frequency[w_count[lang]] = 1
+    else
+      idx = dict[lang].symbol_to_index[new_line_symbol]
+      dict[lang].index_to_frequency[idx] = dict[lang].index_to_frequency[idx] + 1
     end
   end
 
-  if dict[lang].symbol_to_index[new_line_symbol] == nil then
-    w_count[lang] = w_count[lang] + 1
-    dict[lang].symbol_to_index[new_line_symbol] = w_count[lang]
-    dict[lang].index_to_symbol[w_count[lang]] = new_line_symbol
-    dict[lang].index_to_frequency[w_count[lang]] = 1
-  else
-    idx = dict[lang].symbol_to_index[new_line_symbol]
-    dict[lang].index_to_frequency[idx] = dict[lang].index_to_frequency[idx] + 1
-  end
-  end
-
   for i, lang in pairs(langs) do
-  -- resize from max_dict_size to actual size
-  dict[lang].index_to_frequency:resize(w_count[lang])
-  print("# of total unique " .. lang .. " words : " ..
-          w_count[lang] .. "/" .. dict[lang].index_to_frequency:sum())
+    -- resize from max_dict_size to actual size
+    dict[lang].index_to_frequency:resize(w_count[lang])
+    print("# of total unique " .. lang .. " words : " ..
+            w_count[lang] .. "/" .. dict[lang].index_to_frequency:sum())
   end
 
   -- Threshold
@@ -109,25 +104,26 @@ function Tokenizer.make_dictionary()
 
   -- Sorting
   for _, lang in pairs(langs) do
-  -- true : descending order
-  local sorted_frequency, sorted_index = torch.sort(dict[lang].index_to_frequency, true)
-  sorted_frequency:div(math.max(1, dict[lang].index_to_frequency:sum()))
+    -- true : descending order
+    local sorted_frequency, sorted_index = torch.sort(dict[lang].index_to_frequency, true)
+    sorted_frequency:div(math.max(1, dict[lang].index_to_frequency:sum()))
 
-  dict_fname = paths.concat(config.dest_path,
-                            config.name .. '.dictionary' ..
-                              '_lang=' .. lang ..
-                              '_threshold=' .. config.threshold ..
-                              '.th7')
-  torch.save(dict_fname, dict[lang])
+    dict_fname = paths.concat(config.data_path,
+                              config.name .. '.dictionary' ..
+                                '_lang=' .. lang ..
+                                '_threshold=' .. config.threshold ..
+                                '.th7')
+    torch.save(dict_fname, dict[lang])
   end
 
   return dict
 end
 
-function Tokenizer.tokenize(dict)
-  local filenameIn = config.filename
-  local filenameOut = config.token_filename
+--===================
+-- Make tokens
+--===================
 
+function Tokenizer.tokenize(dict, config, filenameIn, filenameOut)
   print("saving to " .. filenameOut)
   local unk = unknown_symbol
   local threshold = config.threshold
@@ -136,25 +132,16 @@ function Tokenizer.tokenize(dict)
   local tot_nr_words = 0
   local tot_lines = 0
   for s in io.lines(filenameIn) do
-    -- store the line
     tot_lines = tot_lines + 1
     all_lines[tot_lines] = s
-    -- remove all the tabs in the string
     s = s:gsub("\t", "")
-    -- remove leading and following white spaces
     s = s:gsub("^%s+", ""):gsub("%s+$", "")
-    -- convert multiple spaces into a single space: this is needed to
-    -- make the following pl.utils.split() function return only words
-    -- and not white spaes
     s = s:gsub("%s+", " ")
-    -- count the words
     local words = pl.utils.split(s, ' ')
-    tot_nr_words = tot_nr_words + #words -- nr. words in the line
-    tot_nr_words = tot_nr_words + 1 -- newline
+    tot_nr_words = tot_nr_words + #words
+    tot_nr_words = tot_nr_words + 1
   end
   print('-- total lines: ' .. tot_lines)
-  -- get the permutation vector
-  -- perm_vec
   local perm_vec
   if shuff == true then
     print('-- shuffling the data')
@@ -163,8 +150,10 @@ function Tokenizer.tokenize(dict)
     print('-- not shuffling the data')
     perm_vec = torch.range(1, tot_lines)
   end
-  -- now store the lines in the tensor
-  local data = torch.Tensor(tot_nr_words) -- id, cluster_id, within_cluster_id
+  local data = {}
+  for _, lang in pairs(langs) do
+    data[lang] = torch.Tensor(tot_nr_words)
+  end
   local id = 0
   local cnt = 1
   for ln = 1, tot_lines do
@@ -190,14 +179,13 @@ function Tokenizer.tokenize(dict)
         else
           id = dict[lang].symbol_to_index[word]
         end
-        data[cnt] = id
+        data[lang][cnt] = id
         cnt = cnt + 1
       end
     end
-    -- Add newline if specified
     if eos == true then
       id = dict[lang].symbol_to_index[new_line_symbol]
-      data[cnt] = id
+      data[lang][cnt] = id
       cnt = cnt + 1
     end
     collectgarbage()
