@@ -1,5 +1,6 @@
 require 'utils'
 
+xlua = require 'xlua'
 pl = require('pl.import_into')()
 config = require 'config'
 ffivector = require('fb.ffivector')
@@ -167,6 +168,8 @@ function Tokenizer.tokenize(dict)
   local id = 0
   local cnt = 1
   for ln = 1, tot_lines do
+    if ln % 100 == 0 then xlua.progress(ln, tot_lines) end
+
     if ln % 2 == 1 then
       lang = langs[1]
     else
